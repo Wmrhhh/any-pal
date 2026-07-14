@@ -1,77 +1,120 @@
-# React + TypeScript + Vite
+# AnyPal
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A WeChat-style multi-functional workspace where every feature is a contact.
 
-Currently, two official plugins are available:
+Chat with AI (DeepSeek, and more coming soon) or use local tools — all in one familiar contact list interface.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss)
+![Express](https://img.shields.io/badge/Express-4-000000?logo=express)
 
-## React Compiler
+## Features
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- **WeChat-Style UI** — Familiar contact list layout, dark theme, clean and intuitive
+- **AI Chat** — Powered by DeepSeek API, with support for more LLM providers coming soon
+- **Contact = Feature** — Every function appears as a contact in your list. Tap to open, just like messaging a friend
+- **Local Tools** — Not everything needs an API. Built-in utilities work offline
+- **Extensible** — Easy to add new "contacts" (features) to your workspace
 
-Note: This will impact Vite dev & build performances.
+## Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS
+- **Backend:** Express + Node.js
+- **Icons:** Lucide React + LobeHub Icons
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Quick Start
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- Node.js 18+
+- A DeepSeek API key (for AI chat features)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Installation
 
+```bash
+# Clone the repo
+git clone https://github.com/Wmrhhh/any-pal.git
+cd any-pal
+
+# Install frontend dependencies
+npm install
+
+# Install backend dependencies
+cd server
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Configuration
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create a `.env` file in the `server/` directory:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+```
+
+> **Note:** `server/.env` is already in `.gitignore`. Never commit your API keys.
+
+### Run
+
+```bash
+# Terminal 1: Start the backend
+cd server
+npm run dev
+
+# Terminal 2: Start the frontend (from project root)
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## Project Structure
 
 ```
+any-pal/
+├── src/                    # Frontend source
+│   ├── component/          # React components
+│   │   ├── ChatList.tsx    # Contact list sidebar
+│   │   ├── RightContent.tsx # Main content area
+│   │   ├── Chat.tsx        # Chat interface
+│   │   └── MessageBox.tsx  # Message input & display
+│   ├── App.tsx
+│   └── main.tsx
+├── server/                 # Backend source
+│   ├── routes/
+│   │   └── chat.js         # Chat API routes
+│   ├── index.js            # Express server entry
+│   └── .env                # API keys (ignored by git)
+├── public/                 # Static assets
+└── dist/                   # Production build
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start frontend dev server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+| `cd server && npm run dev` | Start backend dev server |
+| `cd server && npm start` | Start backend in production |
+
+## Roadmap
+
+- [x] WeChat-style contact list UI
+- [x] DeepSeek AI chat integration
+- [ ] Support for more LLM providers (OpenAI, Claude, etc.)
+- [ ] Local tools (calculator, notes, translator, etc.)
+- [ ] Message history persistence
+- [ ] Customizable contact avatars and names
+- [ ] Mobile-responsive layout
+
+## Contributing
+
+Contributions are welcome! Feel free to open issues or submit pull requests.
+
+## License
+
+[MIT](LICENSE)
