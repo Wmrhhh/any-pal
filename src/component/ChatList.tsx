@@ -1,6 +1,5 @@
 import '../App.css';
 import { Activity } from 'lucide-react'
-import { useState } from 'react';
 import Chat from './Chat'
 
 interface chatDataProps {
@@ -8,17 +7,18 @@ interface chatDataProps {
   name: string,
 }
 
-export default function ChatList() {
+interface ChatListProps {
+  selectedChatId: number | null,
+  setSelectedChatId: (id: number | null) => void,
+}
+
+export default function ChatList({ selectedChatId, setSelectedChatId }: ChatListProps) {
 
   const chatData: chatDataProps[] = [
     { id: 1, name: "DeepSeek", },
     { id: 2, name: "chatGPT", },
     { id: 3, name: "kimi", },
   ]
-
-  const [selectedId, setSelectId] = useState<number | null>(null)
-
-
 
   return (
     <>
@@ -30,7 +30,12 @@ export default function ChatList() {
         <div className='flex flex-col'>
           {
             chatData.map((chat) => (
-              <Chat key={chat.id} name={chat.name} isSelected={selectedId === chat.id} onClick={() => setSelectId(selectedId === chat.id ? null : chat.id)}></Chat>
+              <Chat
+                key={chat.id}
+                name={chat.name}
+                isSelected={selectedChatId === chat.id}
+                onClick={() => setSelectedChatId(selectedChatId === chat.id ? null : chat.id)}
+              ></Chat>
             ))
           }
         </div>

@@ -1,14 +1,16 @@
 import ChatList from "./component/ChatList";
 import RightContent from "./component/RightContent";
-// import Chat from "./component/Chat";
+import ChatContent from "./component/ChatContent";
 import "./App.css";
-// import useState from 'react'
+import { useState } from 'react';
 
 function App() {
+  const [selectedChatId, setSelectedChatId] = useState<number | null>(null)
+
   return (
     <div className="grid md:grid-cols-3">
-      <ChatList></ChatList>
-      <RightContent></RightContent>
+      <ChatList selectedChatId={selectedChatId} setSelectedChatId={setSelectedChatId}></ChatList>
+      {selectedChatId ? <ChatContent></ChatContent> : <RightContent></RightContent>}
     </div>
   );
 }

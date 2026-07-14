@@ -1,6 +1,5 @@
 import { DeepSeek } from '@lobehub/icons';
 
-
 interface ChatProps {
   name: string,
   isSelected: boolean
@@ -8,7 +7,6 @@ interface ChatProps {
 }
 
 export default function Chat({ name, isSelected, onClick }: ChatProps) {
-
   return (
     <div
       onClick={onClick}
@@ -25,4 +23,3 @@ export default function Chat({ name, isSelected, onClick }: ChatProps) {
     </div>
   );
 }
-
