@@ -1,0 +1,25 @@
+// Dexie是IndexedDB的封装库。IndexedDB是浏览器内置数据库
+// Table是Dexie库中导出的一个类型，用于声明Dexie表的结构
+import Dexie, { type Table } from "dexie";
+import type { Conversation, ChatMessage } from "../types/chat"
+
+
+// 定义一个类继承自Dexie
+export class ChatDatabase extends Dexie {
+  // conversations	属性名，对应数据库里的表名
+  // !: 非空断言
+  // 有一张叫 conversations 的表，存的数据是 Conversation 结构，主键(id)是 number 类型
+  conversation!: Table<Conversation, number>;
+  messages!: Table<ChatMessage, number>
+
+  constructor(){
+    super("chatAppDB")
+
+    this.version(1).stores({
+      conversations: "++id, updatedAt",
+      messages: "++id, conversationId, [conversationId+createdAt]"
+    })
+  }
+}
+
+export const db = new ChatDatabase();

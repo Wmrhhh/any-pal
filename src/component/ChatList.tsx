@@ -6,19 +6,13 @@ interface chatDataProps {
   id: number,
   name: string,
 }
-
 interface ChatListProps {
   selectedChatId: number | null,
   setSelectedChatId: (id: number | null) => void,
+  chatData: chatDataProps[],
 }
 
-export default function ChatList({ selectedChatId, setSelectedChatId }: ChatListProps) {
-
-  const chatData: chatDataProps[] = [
-    { id: 1, name: "DeepSeek", },
-    { id: 2, name: "chatGPT", },
-    { id: 3, name: "kimi", },
-  ]
+export default function ChatList({ selectedChatId, setSelectedChatId, chatData }: ChatListProps) {
 
   return (
     <>
