@@ -1,19 +1,17 @@
 import '../App.css';
 import { Activity } from 'lucide-react'
 import Chat from './Chat'
+import { useConversations } from '../db/useChatDB';
+import type { Dispatch, SetStateAction } from 'react';
 
-interface chatDataProps {
-  id: number,
-  name: string,
-}
 interface ChatListProps {
   selectedChatId: number | null,
-  setSelectedChatId: (id: number | null) => void,
-  chatData: chatDataProps[],
+  setSelectedChatId: Dispatch<SetStateAction<number | null>>,
 }
 
-export default function ChatList({ selectedChatId, setSelectedChatId, chatData }: ChatListProps) {
+export default function ChatList({ selectedChatId, setSelectedChatId }: ChatListProps) {
 
+  const conversations = useConversations()
   return (
     <>
       <div className='bg-[#2f2f30] min-h-screen'>
@@ -23,12 +21,19 @@ export default function ChatList({ selectedChatId, setSelectedChatId, chatData }
         </div>
         <div className='flex flex-col'>
           {
-            chatData.map((chat) => (
+            conversations.map((chat) => (
               <Chat
                 key={chat.id}
                 name={chat.name}
                 isSelected={selectedChatId === chat.id}
-                onClick={() => setSelectedChatId(selectedChatId === chat.id ? null : chat.id)}
+                onClick={() => {
+                  setSelectedChatId((current) => {
+                    if (current === chat.id) {
+                      return null;
+                    }
+                    return chat.id ?? null;
+                  });
+                }}
               ></Chat>
             ))
           }

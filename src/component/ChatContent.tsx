@@ -1,37 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MessageBox from './MessageBox'
+import { addMessage, useMessages } from "../db/useChatDB"
+import { type Conversation } from "../types/chat"
+import { db } from "../db/db"
 
-interface Message {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
-interface chatDataProps {
-  id: number,
-  name: string,
-}
 interface ChatContentProps {
-  chatData: chatDataProps[],
-  selectedChatId: number | null
+  conversationId: number | null
 }
-export default function ChatContent({ chatData, selectedChatId }: ChatContentProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "user", content: "nihao" },
-  ]);
+export default function ChatContent({ conversationId }: ChatContentProps) {
+  const messages = useMessages(conversationId)
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [conversation, setConversation] = useState<Conversation | null>(null)
+
+  useEffect(() => {
+    if (conversationId !== null) {
+      db.conversations.get(conversationId).then((conversation) => {
+        setConversation(conversation || null)
+      })
+    }
+  }, [conversationId])
 
   // 调用后端接口的核心函数
   async function sendMessage() {
     // input.trim()	去掉输入首尾空格
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || conversationId === null) return;
 
-    const newMessages: Message[] = [
-      ...messages,
-      { role: "user", content: input },
-    ];
-    setMessages(newMessages);
-    setInput("");
+    const userContent = input;
+    setInput("")
     setLoading(true);
+
+    // 先把用户消息写入DB(写入完成后再发给API)
+    await addMessage(conversationId, "user", userContent)
+
+    const updatedMessages = [...messages, { role: "user" as const, content: userContent }]
 
     try {
       // res是一个Response对象 status ok headers json() text()
@@ -41,7 +43,7 @@ export default function ChatContent({ chatData, selectedChatId }: ChatContentPro
         headers: {
           "Content-Type": "application/json", // 告诉后端发送JSON格式数据
         },
-        body: JSON.stringify({ messages: newMessages }), // 把JS对象解析成JSON字符串
+        body: JSON.stringify({ messages: updatedMessages }), // 把JS对象解析成JSON字符串
       });
 
       if (!res.ok) {
@@ -52,8 +54,8 @@ export default function ChatContent({ chatData, selectedChatId }: ChatContentPro
       const data = await res.json();
       const reply = data.choices[0].message.content;
 
-      // 箭头函数保证最新状态
-      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      // 把AI回复写入DB
+      await addMessage(conversationId, "assistant", reply)
     } catch (err) {
       console.error("调用失败：", err);
       alert("消息发送失败，请重试");
@@ -66,12 +68,13 @@ export default function ChatContent({ chatData, selectedChatId }: ChatContentPro
     <>
       <div className="flex flex-col bg-[#1e1e1f] col-span-2 p-3">
         <h2 className="relative text-[#e2e2e6] pb-3">
-          {selectedChatId ? chatData[selectedChatId - 1].name : null}
+          {/* 动态显示当前会话名称 */}
+          {conversation?.name ?? "聊天"}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-[#39393a]" />
         </h2>
         <div className="flex-1 overflow-y-auto py-3">
-          {messages.map((msg, index) => (
-            <div key={index} className="flex flex-col ">
+          {messages.map((msg) => (
+            <div key={msg.id} className="flex flex-col ">
               <div
                 className={`bg-[#1e1e1f] flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >

@@ -1,8 +1,14 @@
 import { type Conversation, type ChatMessage } from "../types/chat"
 import { useEffect, useState } from "react"
 import { db } from "../db/db"
-import Dexie from "dexie";
+import Dexie from "dexie"
 
+let defaultConversationsInitPromise: Promise<void> | null = null
+const CONVERSATIONS_UPDATED_EVENT = "chat-conversations-updated"
+
+function emitConversationsUpdated() {
+  window.dispatchEvent(new Event(CONVERSATIONS_UPDATED_EVENT))
+}
 
 // 获取会话列表，按更新时间倒序(最新的在最前边)
 export function useConversations(){
@@ -10,17 +16,31 @@ export function useConversations(){
 
   // 读本地数据库、改react状态属于副作用
   useEffect(()=>{
-    // async只修饰函数
+    let cancelled = false
+
     const load = async () => {
       // db.conversations: 操作conversations这张表
       // .orderBy("updatedAt"): 按照updatedAt索引排序
       // .reverse()；翻转顺序：数值大的在前即最近聊过的会话排第一
       // .toArray(): 把Dexie的集合对象转成js数组
       const list = await db.conversations.orderBy("updatedAt").reverse().toArray();
-      // 把数据写道react状态，触发重新渲染
-      setConversations(list);
+      if (!cancelled) {
+        // 把数据写道react状态，触发重新渲染
+        setConversations(list);
+      }
     }
-    load()
+
+    const handleRefresh = () => {
+      void load()
+    }
+
+    window.addEventListener(CONVERSATIONS_UPDATED_EVENT, handleRefresh)
+    void load()
+
+    return () => {
+      cancelled = true
+      window.removeEventListener(CONVERSATIONS_UPDATED_EVENT, handleRefresh)
+    }
     // [] 空依赖数组：只在组件首次挂载时执行一次
   },[])
   // 把当前状态返回给调用方
@@ -33,7 +53,9 @@ export function useMessages(conversationId: number | null){
 
   useEffect(()=>{
     if(conversationId === null){
-      setMessages([]);
+      // Avoid calling setState synchronously inside the effect to prevent
+      // cascading renders. Schedule it on the microtask queue instead.
+      queueMicrotask(() => setMessages([]));
       return;
     }
     const load = async ()=>{
@@ -67,20 +89,34 @@ export async function addMessage(
   });
   // 更新conversations表中id为conversationId的那条记录，把他的时间改为当前时间now
   await db.conversations.update(conversationId, { updatedAt: now });
+  emitConversationsUpdated();
 }
 
 // 初始化默认会话，仅在数据库为空时插入一次
 export async function initDefaultConversations() {
-  // 查询表内有多少条记录  count()是Dexie的计数api，返回一个数字
-  const count = await db.conversations.count();
-  if (count === 0) {
-    const now = Date.now();
-    // bulkAdd()批量插入，比循环调用add()效率高
-    await db.conversations.bulkAdd([
-      // +1 +2是让时间戳有差异，保证排序顺序固定
-      { name: "DeepSeek", subtitle: "探索未至之境", createdAt: now, updatedAt: now },
-      { name: "chatGPT", subtitle: "探索未至之境", createdAt: now + 1, updatedAt: now + 1 },
-      { name: "kimi", subtitle: "探索未至之境", createdAt: now + 2, updatedAt: now + 2 },
-    ]);
+  if (defaultConversationsInitPromise) {
+    return defaultConversationsInitPromise;
+  }
+
+  defaultConversationsInitPromise = db.transaction("rw", db.conversations, async () => {
+    // 查询表内有多少条记录  count()是Dexie的计数api，返回一个数字
+    const count = await db.conversations.count();
+    if (count === 0) {
+      const now = Date.now();
+      // bulkAdd()批量插入，比循环调用add()效率高
+      // 这里按默认顺序设置不同的时间戳，避免 updatedAt 相同导致排序顺序不稳定
+      await db.conversations.bulkAdd([
+        { name: "DeepSeek", subtitle: "探索未至之境", createdAt: now + 2, updatedAt: now + 2 },
+        { name: "chatGPT", subtitle: "探索未至之境", createdAt: now + 1, updatedAt: now + 1 },
+        { name: "kimi", subtitle: "探索未至之境", createdAt: now, updatedAt: now },
+      ]);
+      emitConversationsUpdated();
+    }
+  });
+
+  try {
+    await defaultConversationsInitPromise;
+  } finally {
+    defaultConversationsInitPromise = null;
   }
 }

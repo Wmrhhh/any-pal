@@ -22,7 +22,7 @@ export async function chatRoute(req, res) {
       body: JSON.stringify({
         model: DEEPSEEK_MODEL,
         messages,
-        stream: true,
+        stream: false,
       }),
     })
 

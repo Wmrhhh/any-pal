@@ -7,6 +7,9 @@ interface ChatProps {
 }
 
 export default function Chat({ name, isSelected, onClick }: ChatProps) {
+
+
+
   return (
     <div
       onClick={onClick}
