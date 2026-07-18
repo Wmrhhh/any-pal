@@ -20,6 +20,13 @@ export default function MessageBox({ sendMessage, loading, input, setInput }: Me
         placeholder="随便说点什么"
         onChange={e => setInput(e.target.value)}
         className="outline-none focus:ring-0"
+        onKeyDown={e => {
+          // e.shiftKey允许 shift + enter 换行
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();  // 阻止默认换行
+            submit();
+          }
+        }}
       />
       <div className="flex justify-end">
         <button

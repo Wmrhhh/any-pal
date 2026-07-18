@@ -4,6 +4,7 @@ import { db } from "../db/db"
 import Dexie from "dexie"
 
 let defaultConversationsInitPromise: Promise<void> | null = null
+// 自定义事件的作用 = "非 React 代码通知 React 组件"
 const CONVERSATIONS_UPDATED_EVENT = "chat-conversations-updated"
 
 function emitConversationsUpdated() {
@@ -30,10 +31,12 @@ export function useConversations(){
       }
     }
 
+    // Promise 缓存 = "占坑"，告诉后来者"别重复干活，等我就行"
     const handleRefresh = () => {
       void load()
     }
 
+    // addMessage 不在 React 组件里调用，它拿不到 Context
     window.addEventListener(CONVERSATIONS_UPDATED_EVENT, handleRefresh)
     void load()
 
@@ -55,20 +58,30 @@ export function useMessages(conversationId: number | null){
     if(conversationId === null){
       // Avoid calling setState synchronously inside the effect to prevent
       // cascading renders. Schedule it on the microtask queue instead.
+      // 把 setState 推到微任务队列，让当前 effect 先完成，React 调度器能正确合并更新
       queueMicrotask(() => setMessages([]));
       return;
     }
+
+    let cancelled = false 
+
     const load = async ()=>{
       const list = await db.messages
       // 指定用复合索引查询
         .where("[conversationId+createdAt]")
-      // 范围查询：只查 conversationId 匹配的记录，时间从最小到最大
+      // 数据库索引树里，数据是先按 conversationId 分组，组内再按 createdAt 排好序的
         .between([conversationId, Dexie.minKey], [conversationId, Dexie.maxKey])
       // 把查询结果集合转成js数组
         .toArray();
-      setMessages(list)
+        if(!cancelled){
+          setMessages(list)
+        }
+      
     }
     load()
+    return()=>{
+      cancelled = true
+    }
   }, [conversationId])
 
   return messages
@@ -98,6 +111,7 @@ export async function initDefaultConversations() {
     return defaultConversationsInitPromise;
   }
 
+  // "rw" 事务保证原子性：查空和插入要么都成功，要么都失败
   defaultConversationsInitPromise = db.transaction("rw", db.conversations, async () => {
     // 查询表内有多少条记录  count()是Dexie的计数api，返回一个数字
     const count = await db.conversations.count();

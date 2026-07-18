@@ -1,5 +1,6 @@
 // 会话 聊天入口 chat
 export interface Conversation {
+  // 插入前对象没有 id，Dexie 的 ++id 会自动分配
   id?: number;  // chat的唯一编号
   name: string;  // 显示名称，如 DeepSeek
   subtitle?: string;  // 副标题

@@ -69,6 +69,7 @@ export default function ChatContent({ conversationId }: ChatContentProps) {
       <div className="flex flex-col bg-[#1e1e1f] col-span-2 p-3">
         <h2 className="relative text-[#e2e2e6] pb-3">
           {/* 动态显示当前会话名称 */}
+          {/* conversation有值时显示conversation.name,只有在null/undefined时显示“聊天” */}
           {conversation?.name ?? "聊天"}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-[#39393a]" />
         </h2>
