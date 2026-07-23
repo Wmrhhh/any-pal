@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  --color-chat-bg: #1e1e1f;
+  --color-chat-bg-secondary: #2f2f30;
+  --color-chat-hover: #39393a;
+  --color-chat-text: #e2e2e6;
+  --color-chat-muted: #818186;
+  --color-chat-accent: #19ac70;
+}

@@ -17,7 +17,7 @@
 ## 如何实现单选效果
 
 1. 状态提升至父组件-状态中存储的是那个组件当前被点击
-  -涉及性能优化（memo）     (未完成)
+  -涉及性能优化（memo）                                                   -(未完成)
 
 # 2026-7-15 to 7-18
 
@@ -53,7 +53,7 @@
   ### 问题 4：queueMicrotask(() => setMessages([])) 改成直接 setMessages([]) 会怎样？
     - 同步 setState 在 effect 里可能触发级联渲染
   ### 问题 5：cancelled 是干嘛的？
-    - 组件卸载后异步查询完成也不 setState，防内存泄漏和无效更新。
+    - 防止过期请求覆盖最新数据  (竞态条件)
   ### 问题 6：为什么用自定义事件不用 Context？
     - addMessage 在组件树外，拿不到 Context，事件是最轻量的跨层通信。
   
@@ -73,3 +73,33 @@
   - 无论在哪里（事件处理、setTimeout、Promise），多个 setState 合并成一次渲染。
 4. 不可变更新
   - React 通过引用比较判断数据变化
+
+
+# 2026-7-21
+
+## 关于Promise
+
+ - Promise 是 JavaScript 原生提供的对象，很多异步 API（fetch、数据库操作等）返回 Promise。Promise<T> 表示未来会得到一个 T 类型的数据。
+ 代码中的defaultConversationsInitPromise(默认会话初始话任务) 用来缓存正在执行的初始化任务，防止 React StrictMode 或其他地方重复调用
+ 初始化函数。它不是让 JS 自动合并两个 Promise，而是让后续调用直接复用第一次创建的 Promise。
+
+## 非React数据层，如何通知React UI更新
+
+ - 数据变化 - 发送自定义事件 - 监听事件 - 触发回调函数 - 重新读取数据 - 渲染
+
+## 分层思想
+
+ - 数据库层 - 修改数据
+ - 事件层 - 通知变化
+ - react层 - 重新读取数据并渲染
+
+
+# 2026-7-23
+
+## Zustand
+
+ 1. 使用场景
+  - Zustand负责管理 React 应用中的「跨组件共享状态（global/client state）」，让多个组件能够读取和修改同一份状态，而不用通过 props 层层传递。
+
+ 2. 为什么message不用Zustand
+  - message数据源是本地数据库，或后端数据库，如果zustand没同步或者两个数据源不一致会很危险？      -(什么危险？)

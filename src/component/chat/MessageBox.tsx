@@ -13,7 +13,7 @@ export default function MessageBox({ sendMessage, loading, input, setInput }: Me
     sendMessage();
   }
   return (
-    <div className="sticky flex flex-col justify-between bottom-0 w-full h-30 p-3 bg-[#1e1e1f] text-[#e2e2e6] border-2 border-[#39393a] rounded-xl ">
+    <div className="shrink-0 flex flex-col justify-between m-3 mt-0 h-30 p-3 bg-chat-bg text-chat-text border-2 border-[#39393a] rounded-xl ">
       <input
         type="text"
         value={input}

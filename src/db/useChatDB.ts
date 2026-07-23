@@ -37,11 +37,13 @@ export function useConversations(){
     }
 
     // addMessage 不在 React 组件里调用，它拿不到 Context
+    // 如果有人发送(CONVERSATIONS_UPDATED_EVENT事件，就执行handleRefresh
     window.addEventListener(CONVERSATIONS_UPDATED_EVENT, handleRefresh)
     void load()
 
     return () => {
       cancelled = true
+      // removeEventListener 的作用不是简单释放内存，而是解除组件和外部系统之间的连接，避免已经销毁的组件继续响应事件，同时防止内存泄漏和重复执行逻辑。
       window.removeEventListener(CONVERSATIONS_UPDATED_EVENT, handleRefresh)
     }
     // [] 空依赖数组：只在组件首次挂载时执行一次
@@ -78,9 +80,14 @@ export function useMessages(conversationId: number | null){
         }
       
     }
-    load()
+    const handleRefresh = () => {
+      void load()
+    }
+    window.addEventListener(CONVERSATIONS_UPDATED_EVENT, handleRefresh)
+    void load()
     return()=>{
       cancelled = true
+      window.removeEventListener(CONVERSATIONS_UPDATED_EVENT, handleRefresh)
     }
   }, [conversationId])
 
@@ -107,6 +114,8 @@ export async function addMessage(
 
 // 初始化默认会话，仅在数据库为空时插入一次
 export async function initDefaultConversations() {
+  // 缓存正在执行的初始化任务，防止重复执行。
+  // Promise 缓存
   if (defaultConversationsInitPromise) {
     return defaultConversationsInitPromise;
   }

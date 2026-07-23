@@ -1,25 +1,25 @@
-import ChatList from "./component/ChatList";
-import RightContent from "./component/RightContent";
-import ChatContent from "./component/ChatContent";
+import ChatList from "./component/chat/ChatList";
+import RightContent from "./component/chat/RightContent";
+import ChatContent from "./component/chat/ChatContent";
+import ToolsList from "./component/ToolsList"
 import "./App.css";
 import { initDefaultConversations } from "./db/useChatDB"
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useChatStore } from "./store/chatStore";
 
 function App() {
 
-  const [selectedChatId, setSelectedChatId] = useState<number | null>(null)
+  const selectedChatId = useChatStore((state) => state.conversationId)
 
   useEffect(() => {
     initDefaultConversations()
   }, [])
   return (
-    <div className="grid md:grid-cols-3">
-      <ChatList
-        selectedChatId={selectedChatId}
-        setSelectedChatId={setSelectedChatId}
-      >
+    <div className="flex h-screen overflow-hidden">
+      <ToolsList></ToolsList>
+      <ChatList>
       </ChatList>
-      {selectedChatId ? <ChatContent conversationId={selectedChatId}></ChatContent> : <RightContent />}
+      {selectedChatId ? <ChatContent></ChatContent> : <RightContent />}
     </div >
   );
 }

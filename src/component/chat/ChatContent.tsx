@@ -1,17 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import MessageBox from './MessageBox'
-import { addMessage, useMessages } from "../db/useChatDB"
-import { type Conversation } from "../types/chat"
-import { db } from "../db/db"
+import { addMessage, useMessages } from "../../db/useChatDB"
+import { type ChatMessage, type Conversation } from "../../types/chat"
+import { db } from "../../db/db"
+import { useChatStore } from "../../store/chatStore";
 
-interface ChatContentProps {
-  conversationId: number | null
-}
-export default function ChatContent({ conversationId }: ChatContentProps) {
+export default function ChatContent() {
+  const conversationId = useChatStore((state) => state.conversationId)
   const messages = useMessages(conversationId)
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null)
+  // 初始值是null，因为一开始DOM还不存在
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (conversationId !== null) {
@@ -23,6 +24,7 @@ export default function ChatContent({ conversationId }: ChatContentProps) {
 
   // 调用后端接口的核心函数
   async function sendMessage() {
+
     // input.trim()	去掉输入首尾空格
     if (!input.trim() || loading || conversationId === null) return;
 
@@ -64,27 +66,48 @@ export default function ChatContent({ conversationId }: ChatContentProps) {
     }
   }
 
+  useEffect(() => {
+    messagesContainerRef.current?.scrollTo({
+      top: messagesContainerRef.current.scrollHeight,
+      behavior: 'smooth',  // 平滑滚动
+    });
+  }, [messages]);
   return (
     <>
-      <div className="flex flex-col bg-[#1e1e1f] col-span-2 p-3">
-        <h2 className="relative text-[#e2e2e6] pb-3">
+      <div className="flex flex-col bg-chat-bg h-full min-h-0 flex-14/20">
+        <h2 className="relative text-chat-text pb-3 shrink-0 m-3 mb-0">
           {/* 动态显示当前会话名称 */}
           {/* conversation有值时显示conversation.name,只有在null/undefined时显示“聊天” */}
           {conversation?.name ?? "聊天"}
           <div className="absolute bottom-0 left-0 right-0 h-px bg-[#39393a]" />
         </h2>
-        <div className="flex-1 overflow-y-auto py-3">
+        <div className="flex-1 overflow-y-auto mr-0" ref={messagesContainerRef}>
           {messages.map((msg) => (
             <div key={msg.id} className="flex flex-col ">
+              <div className="text-[#7b7b80] flex justify-center">
+                {(() => {
+                  const ts = (msg as ChatMessage).createdAt;
+                  if (!ts) return "";
+                  const d = new Date(ts);
+                  const h = String(d.getHours()).padStart(2, '0');
+                  const m = String(d.getMinutes()).padStart(2, '0');
+                  return `${h}:${m}`;
+                })()}
+              </div>
               <div
-                className={`bg-[#1e1e1f] flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`bg-chat-bg flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div className={`text-[#e2e2e6] bg-[#2f2f30] rounded-lg p-3 mb-3`}>
-                  {msg.content}
-                </div>
+                <div className={`mx-3 rounded-lg ${msg.role === "user" ? "" : "w-10 h-10 bg-chat-bg-secondary"}`}></div>
+                <div className={`${msg.role === "user" ? "" : "w-2/3"} text-chat-text bg-chat-bg-secondary rounded-lg p-3 mb-3`}>{msg.content}</div>
+                <div className={`mx-3 rounded-lg ${msg.role === "user" ? "w-10 h-10 bg-chat-accent" : ""}`}></div>
               </div>
             </div>
           ))}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="mx-3 rounded-lg w-10 h-10 bg-chat-bg-secondary "></div>
+              <div className=" text-chat-text bg-chat-bg-secondary rounded-lg p-3 mb-3 animate-pulse">正在思考中</div>
+            </div>)}
         </div>
         <MessageBox
           sendMessage={sendMessage}

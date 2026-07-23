@@ -1,1 +1,28 @@
 @import "tailwindcss";
+
+/* 整个滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* 滚动条轨道（背景） */
+::-webkit-scrollbar-track {
+  background: #1e1e1f;
+}
+
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  background: #4a4a4b;
+  border-radius: 3px;
+}
+
+/* 滑块悬停 */
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5b;
+}
+
+/* 滚动条角落（横向+纵向交汇处） */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
