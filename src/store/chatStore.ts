@@ -7,7 +7,7 @@ interface ConversationState {
 
 interface ThemeStore{
   theme: "light" | "dark"
-  setTheme: ()=>void
+  setTheme: (theme: "light" | "dark") => void
 }
 
 // create<ConversationState>: 创建一个符合 ConversationState 类型的 store
@@ -20,11 +20,11 @@ export const useChatStore = create<ConversationState>((set) => ({
   }
 }))
 
-export const useThemeStore = create<ThemeStore>((set)=>({
+export const useThemeStore = create<ThemeStore>((set) => ({
   theme: "dark",
-  setTheme(){
+  setTheme(theme) {
     set({
-      theme: "dark"
+      theme,
     })
-  }
+  },
 }))

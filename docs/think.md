@@ -103,3 +103,12 @@
 
  2. 为什么message不用Zustand
   - message数据源是本地数据库，或后端数据库，如果zustand没同步或者两个数据源不一致会很危险？      -(什么危险？)
+
+
+# 2026-7-24
+
+## 问题：点击setting后浏览器地址栏干煸，router内部发生了什么？
+  - 点击按钮 -> React Router 调用浏览器 History API -> 浏览器地址栏变成 /settings ->
+    React Router 监听到 URL 改变 -> Router 开始匹配路由 -> 找到：path="/settings" element=<SettingPage />  -> React 重新渲染 -> 页面显示 SettingPage
+      
+  - URL先变 ，Router再根据URL决定渲染什么
