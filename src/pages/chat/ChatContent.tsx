@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import MessageBox from './MessageBox'
-import { addMessage, useMessages } from "../../db/useChatDB"
-import { type ChatMessage, type Conversation } from "../../types/chat"
-import { db } from "../../db/db"
+import MessageBox from "../../components/MessageBox";
+import { addMessage } from "../../db/useChatDB";
+import { useMessages } from "../../hooks/useMessages"
+import { type ChatMessage, type Conversation } from "../../types/chat";
+import { db } from "../../db/db";
 import { useChatStore } from "../../store/chatStore";
 
 export default function ChatContent() {
@@ -13,7 +14,7 @@ export default function ChatContent() {
   const [conversation, setConversation] = useState<Conversation | null>(null)
   // 初始值是null，因为一开始DOM还不存在
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-
+  // const { conversationIdRouter } = useParams()
   useEffect(() => {
     if (conversationId !== null) {
       db.conversations.get(conversationId).then((conversation) => {

@@ -9,9 +9,6 @@ import { useEffect } from 'react';
 // import Set from './component/tool/Set'
 
 function App() {
-
-  // 
-
   useEffect(() => {
     initDefaultConversations()
   }, [])

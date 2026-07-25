@@ -13,20 +13,13 @@ export default function MessageBox({ sendMessage, loading, input, setInput }: Me
     sendMessage();
   }
   return (
-    <div className="shrink-0 flex flex-col justify-between m-3 mt-0 h-30 p-3 bg-chat-bg text-chat-text border-2 border-[#39393a] rounded-xl ">
+    <div className="sticky flex flex-col justify-between bottom-0 w-full h-30 p-3 bg-[#1e1e1f] text-[#e2e2e6] border-2 border-[#39393a] rounded-xl ">
       <input
         type="text"
         value={input}
         placeholder="随便说点什么"
         onChange={e => setInput(e.target.value)}
         className="outline-none focus:ring-0"
-        onKeyDown={e => {
-          // e.shiftKey允许 shift + enter 换行
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();  // 阻止默认换行
-            submit();
-          }
-        }}
       />
       <div className="flex justify-end">
         <button

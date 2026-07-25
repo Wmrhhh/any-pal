@@ -112,3 +112,57 @@
     React Router 监听到 URL 改变 -> Router 开始匹配路由 -> 找到：path="/settings" element=<SettingPage />  -> React 重新渲染 -> 页面显示 SettingPage
       
   - URL先变 ，Router再根据URL决定渲染什么
+
+
+
+
+
+
+src
+|                           |-<ToolsList />
+|-- layouts                 |-<outlet />
+|      AppLayout.tsx     ---|         |-<ChatList/>
+|      ChatLayout.tsx    -------------|-<outlet/>   (<ChatContent /> | <RightContent/>(EmptyChat.tsx))
+|      SettingLayout.tsx   ---------------------------|              
+|                                                     |-<SettingMenu />
+|-- pages                                             |-<ThemePage />
+|      chat                                           |-<outlet />
+|         EmptyChat.tsx
+|         ChatContent.tsx
+|
+|      settings
+|         ThemePage.tsx
+|         AccountPage.tsx
+|         ModelPage.tsx
+|     
+|      LoginPage.tsx
+|
+|-- Router     
+|     index.tsx
+|
+|-- components
+|        ToolList.tsx
+|        ChatList.tsx
+|        MessageItem.tsx
+|        SettingMenu.tsx
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
+|
