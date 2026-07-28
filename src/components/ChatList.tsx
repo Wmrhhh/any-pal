@@ -12,10 +12,10 @@ export default function ChatList() {
   const setConversationId = useChatStore((state) => state.setConversationId);
 
   return (
-    <div className="h-full min-h-0 w-80 shrink-0 overflow-y-auto bg-chat-bg-secondary">
+    <div className="h-full min-h-0 w-80 shrink-0 overflow-y-auto bg-[#eeeef0] dark:bg-[#2f2f30]">
       <div className="m-4 flex">
         <Activity className="mr-4 h-4 w-4 text-[#b0b0b6]" />
-        <span className="text-[#b0b0b6] leading-none">善医者无煌煌之名</span>
+        <span className="dark:text-[#b0b0b6] text-[#68686d] leading-none">善医者无煌煌之名</span>
       </div>
       <div className="flex flex-col">
         {conversations.map((chat) => (

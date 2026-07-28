@@ -8,18 +8,18 @@
 
 /* 滚动条轨道（背景） */
 ::-webkit-scrollbar-track {
-  background: #1e1e1f;
+  background: var(--scrollbar-track);
 }
 
 /* 滚动条滑块 */
 ::-webkit-scrollbar-thumb {
-  background: #4a4a4b;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 /* 滑块悬停 */
 ::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5b;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* 滚动条角落（横向+纵向交汇处） */

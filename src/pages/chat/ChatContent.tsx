@@ -75,8 +75,8 @@ export default function ChatContent() {
   }, [messages]);
   return (
     <>
-      <div className="flex flex-col bg-chat-bg h-full min-h-0 flex-14/20">
-        <h2 className="relative text-chat-text pb-3 shrink-0 m-3 mb-0">
+      <div className="flex flex-col bg-[#fafafa] dark:bg-[#1e1e1f] h-full min-h-0 flex-14/20">
+        <h2 className="relative  dark:text-[#e1e1e5] text-[#19191a] pb-3 shrink-0 m-3 mb-0">
           {/* 动态显示当前会话名称 */}
           {/* conversation有值时显示conversation.name,只有在null/undefined时显示“聊天” */}
           {conversation?.name ?? "聊天"}
@@ -98,9 +98,9 @@ export default function ChatContent() {
               <div
                 className={`bg-chat-bg flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div className={`mx-3 rounded-lg ${msg.role === "user" ? "" : "w-10 h-10 bg-chat-bg-secondary"}`}></div>
-                <div className={`${msg.role === "user" ? "" : "w-2/3"} text-chat-text bg-chat-bg-secondary rounded-lg p-3 mb-3`}>{msg.content}</div>
-                <div className={`mx-3 rounded-lg ${msg.role === "user" ? "w-10 h-10 bg-chat-accent" : ""}`}></div>
+                <div className={`mx-3 rounded-lg ${msg.role === "user" ? "" : "w-10 h-10 bg-[#000000]"}`}></div>
+                <div className={`${msg.role === "user" ? "" : "w-2/3"}  bg-[#eeeef0] text-[#19191a] dark:bg-[#2f2f30] dark:text-[#e1e1e5] rounded-lg p-3 mb-3`}>{msg.content}</div>
+                <div className={`mx-3 rounded-lg ${msg.role === "user" ? "w-10 h-10 bg-[#19ac70]" : ""}`}></div>
               </div>
             </div>
           ))}
