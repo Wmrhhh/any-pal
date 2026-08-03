@@ -1,3 +1,11 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+
+  input,
+  textarea {
+    outline: none;
+  }
+}

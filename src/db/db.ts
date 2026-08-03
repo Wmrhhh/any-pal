@@ -18,11 +18,18 @@ export class ChatDatabase extends Dexie {
 
     // version(1): 数据库版本号  stores: 定义有哪些表，以及每张表的结构规则
     // 修改表结构时必须升级版本号
-    this.version(1).stores({
-      conversations: "++id, updatedAt",
-      // 复合索引，让"筛选+排序"在索引树里一步完成
-      messages: "++id, conversationId, [conversationId+createdAt]"
-    })
+    this.version(2).stores({
+    conversations: "++id, updatedAt, messageCount",
+    messages: "++id, conversationId, [conversationId+createdAt]"
+    }).upgrade(tx => {
+    // 遍历所有老会话，数一下每个会话有多少条消息，写回 messageCount
+    return tx.table("conversations").toCollection().modify(async (conv) => {
+      const count = await tx.table("messages")
+        .where("conversationId").equals(conv.id)
+        .count();
+      conv.messageCount = count;
+      });
+    });
   }
 }
 

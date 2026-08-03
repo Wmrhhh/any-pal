@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react"
 import { db } from "../db/db"
 import { type Conversation } from "../types/chat"
+import { CONVERSATIONS_UPDATED_EVENT } from '../utils/events'
 
 // 获取会话列表，按更新时间倒序(最新的在最前边)
 export function useConversations(){
   const [conversations, setConversations] = useState<Conversation[]>([])
   // let defaultConversationsInitPromise: Promise<void> | null = null
   // 自定义事件的作用 = "非 React 代码通知 React 组件"
-  const CONVERSATIONS_UPDATED_EVENT = "chat-conversations-updated"
 
   // 读本地数据库、改react状态属于副作用
   useEffect(()=>{

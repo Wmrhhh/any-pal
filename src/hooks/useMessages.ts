@@ -2,11 +2,11 @@ import { useEffect, useState } from "react"
 import Dexie from "dexie"
 import { db } from "../db/db"
 import { type ChatMessage } from "../types/chat"
+import { CONVERSATIONS_UPDATED_EVENT } from '../utils/events'
 
 // 获取指定会话的消息，时间正序，最早的在最前边
 export function useMessages(conversationId: number | null){
     // 自定义事件的作用 = "非 React 代码通知 React 组件"
-  const CONVERSATIONS_UPDATED_EVENT = "chat-conversations-updated"
   const [messages, setMessages] = useState<ChatMessage[]>([])
 
   useEffect(()=>{

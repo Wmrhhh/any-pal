@@ -143,3 +143,25 @@
 
 
 ### 每一个组件都要告诉React我要渲染什么
+
+
+# 2026-7-30
+
+## 流式输出
+
+- token: AI 能理解的最小文本单位。
+- ReadableStream: 负责：不断读取。
+- TextDecoder: 负责：把0101010101变成React,因为网络传输是二进制。
+
+### fetch 如何实现流式读取？
+
+- fetch 返回 Response 对象，其中 body 是一个 ReadableStream。通过 getReader 获取 reader，然后不断调用 read 方法读取数据块。
+  由于读取的数据是二进制格式，需要使用 TextDecoder 解码成字符串，再通过 React 状态增量更新 UI。
+
+### HTTP请求特点
+
+- 一个HTTP请求只有一个Response.但是这个Response有两种发送方式：普通响应，流式响应
+
+- reader.read()只认字节 
+- TCP是字节流，只保证顺序，不保证每次读到多少
+- SSE协议在TCP的字节流上增加了一层“消息边界” 规定 date:...<空行> 表示一条完整消息结束

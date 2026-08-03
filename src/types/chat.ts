@@ -4,6 +4,7 @@ export interface Conversation {
   id?: number;  // chat的唯一编号
   name: string;  // 显示名称，如 DeepSeek
   subtitle?: string;  // 副标题
+  messageCount: number;   // 该会话下的消息数量
   createdAt: number;  // 创建时间戳(什么时候创建的)
   updatedAt: number;  // 最后更新时间戳(用于排序)
 }
@@ -15,4 +16,5 @@ export interface ChatMessage {
   role: "user" | "assistant" | "system";  // 谁发的a
   content: string;  // 消息内容
   createdAt: number;   // 每一条消息的发送时间
+  model?:string;    // 每条消息是谁生成的
 }

@@ -11,6 +11,8 @@ export default function ChatContent() {
   const messages = useMessages(conversationId)
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  // Runtime状态
+  const [streamingReply, setStreamingReply] = useState("")
   const [conversation, setConversation] = useState<Conversation | null>(null)
   // 初始值是null，因为一开始DOM还不存在
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -54,11 +56,55 @@ export default function ChatContent() {
       }
 
       // await等待响应体数据到达，解析成js对象
-      const data = await res.json();
-      const reply = data.choices[0].message.content;
+      // const data = await res.json();
 
+      // 从 Response.body 这个数据流上创建一个读取器，以后我可以自己控制读取节奏。
+      const reader = res.body?.getReader()
+      if (!reader) {
+        throw new Error("无法获取响应流")
+      }
+      // TextDecoder 是把字节码解析成我们认识的文字符号。
+      const decoder = new TextDecoder()
+      // const reply = data.choices[0].message.content;
+      let fullReply = "";
+
+      while (true) {
+        // 持续的拿取数据
+        const { done, value } = await reader.read()
+        if (done) {
+          await addMessage(conversationId, "assistant", fullReply)
+          setStreamingReply('')
+          break;
+        }
+        const chunk = decoder.decode(value, {
+          stream: true,
+        })
+        // console.log(chunk)
+        const lines = chunk.split("\n")
+        // console.log(lines);
+        for (const line of lines) {
+          // console.log(line);
+          if (!line.startsWith("data: ")) {
+            continue
+          }
+          if (line === "data: [DONE]") {
+            continue
+          }
+          // console.log(line);
+          const jsonString = line.replace("data: ", "")
+          // console.log(jsonString);
+          // 把一个完整的 JSON 字符串解析成 JavaScript 对象。
+          const json = JSON.parse(jsonString)
+          // console.log(json);
+          const content = json.choices[0].delta.content ?? "";
+          // console.log(content);
+          fullReply += content;
+          setStreamingReply(fullReply)
+        }
+
+      }
       // 把AI回复写入DB
-      await addMessage(conversationId, "assistant", reply)
+      // await addMessage(conversationId, "assistant", reply)
     } catch (err) {
       console.error("调用失败：", err);
       alert("消息发送失败，请重试");
@@ -104,11 +150,19 @@ export default function ChatContent() {
               </div>
             </div>
           ))}
-          {loading && (
-            <div className="flex justify-start">
-              <div className="mx-3 rounded-lg w-10 h-10 bg-chat-bg-secondary "></div>
-              <div className=" text-chat-text bg-chat-bg-secondary rounded-lg p-3 mb-3 animate-pulse">正在思考中</div>
+          {loading && !streamingReply && (
+            < div className="flex justify-start">
+              <div className="mx-3 rounded-lg w-10 h-10 dark:bg-[#000000]"></div>
+              <div className=" dark:text-[#e1e1e5]  text-[#19191a] rounded-lg p-3 mb-3 animate-pulse">正在思考中</div>
             </div>)}
+          {streamingReply && (
+            <div
+              className={`bg-chat-bg flex justify-start`}
+            >
+              <div className={`mx-3 rounded-lg w-10 h-10 bg-[#000000]`}></div>
+              <div className={` w-2/3  bg-[#eeeef0] text-[#19191a] dark:bg-[#2f2f30] dark:text-[#e1e1e5] rounded-lg p-3 mb-3`}>{streamingReply}</div>
+            </div>
+          )}
         </div>
         <MessageBox
           sendMessage={sendMessage}
@@ -116,7 +170,7 @@ export default function ChatContent() {
           input={input}
           setInput={setInput}>
         </MessageBox>
-      </div>
+      </div >
     </>
   )
 }
