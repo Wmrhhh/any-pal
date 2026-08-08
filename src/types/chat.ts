@@ -17,4 +17,5 @@ export interface ChatMessage {
   content: string;  // 消息内容
   createdAt: number;   // 每一条消息的发送时间
   model?:string;    // 每条消息是谁生成的
+  // messageCount: number;
 }

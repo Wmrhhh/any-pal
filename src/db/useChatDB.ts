@@ -10,7 +10,7 @@ export async function addMessage(
   role: "user" | "assistant" | "system",
   content: string
 ){ 
-  
+  // const count = 0
   const now = Date.now();
   await db.messages.add({
     conversationId,
@@ -18,8 +18,9 @@ export async function addMessage(
     content,
     createdAt: now,
   });
-  // 更新conversations表中id为conversationId的那条记录，把他的时间改为当前时间now
-  await db.conversations.update(conversationId, { updatedAt: now });
+  const conversation = await db.conversations.get(conversationId);
+  const nextCount = (conversation?.messageCount ?? 0) + 1
+  await db.conversations.update(conversationId, { updatedAt: now, messageCount:nextCount });
   emitConversationsUpdated();
 }
 
