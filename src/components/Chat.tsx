@@ -8,13 +8,15 @@ interface ChatProps {
   id: number | undefined
   name: string,
   isSelected: boolean
+  subtitle: string,
   updatedAt: number
   onClick: () => void
 }
 
-export default function Chat({ id, name, isSelected, updatedAt, onClick }: ChatProps) {
+export default function Chat({ id, isSelected, subtitle, updatedAt, onClick }: ChatProps) {
   const [isOpen, setIsOpen] = useState(false)
   const navigate = useNavigate();
+  // const conversations = useConversations()
 
   function toggleMenu(event: MouseEvent<SVGElement>) {
     event.stopPropagation();
@@ -30,6 +32,14 @@ export default function Chat({ id, name, isSelected, updatedAt, onClick }: ChatP
     }
     setIsOpen(false);
   }
+
+  function formatUpdatedAt() {
+    if (!updatedAt) return "";
+    const d = new Date(updatedAt);
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  }
   return (
     <div
       onClick={onClick}
@@ -38,17 +48,11 @@ export default function Chat({ id, name, isSelected, updatedAt, onClick }: ChatP
     >
       <DeepSeek.Avatar size={40} className="items-center w-10 h-10 bg-white" />
       <div className='ml-3 grid grid-rows-[1fr_auto] w-30'>
-        <h2 className={`${isSelected ? 'text-[#decae5]' : ''}text-[#181819] dark:text-[#e3e3e6] h-4 leading-none`}>{name}</h2>
-        <p className={`${isSelected ? 'text-[#b9e6d4]' : 'text-[#818186]'} text-[12px] mb-0 pb-0 leading-none`}>探索未至之境</p>
+        <h2 className={`${isSelected ? 'text-[#decae5]' : ''}text-[#181819] dark:text-[#e3e3e6] h-4 leading-none`}>{subtitle}</h2>
+        <p className={`${isSelected ? 'text-[#b9e6d4]' : 'text-[#818186]'} text-[12px] mb-0 pb-0 w-45 leading-none`}>{formatUpdatedAt()}</p>
       </div>
       <div className='ml-20 relative'>
-        <span className={`ml-auto flex items-top ${isSelected ? 'text-[#b9e6d4]' : 'text-[#818186]'} leading-none text-[12px]`}>{(() => {
-          if (!updatedAt) return "";
-          const d = new Date(updatedAt);
-          const h = String(d.getHours()).padStart(2, '0');
-          const m = String(d.getMinutes()).padStart(2, '0');
-          return `${h}:${m}`;
-        })()}</span>
+        <span className={`ml-auto flex items-top ${isSelected ? 'text-[#b9e6d4]' : 'text-[#818186]'} leading-none text-[12px]`}>{ }</span>
         <Ellipsis
           className='text-[#818186] hover:bg-[#1e1e1f] mt-2 rounded-md cursor-pointer'
           onClick={toggleMenu}

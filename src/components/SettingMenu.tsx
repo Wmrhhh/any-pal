@@ -7,7 +7,7 @@ export default function SettingMenu() {
   return (
     <aside className="flex w-80 shrink-0 flex-col bg-[#eeeef0] dark:bg-[#2f2f30] px-4 py-5">
       <div className="mb-6 px-2">
-        <p className="text-xs uppercase tracking-[0.24em] text-chat-muted">preferences</p>
+        <p className="text-xs uppercase tracking-[0.24em]">preferences</p>
         <h2 className="mt-2 text-2xl font-semibold dark:text-[#e1e1e5] text-[#1a1a1a]">设置</h2>
       </div>
 

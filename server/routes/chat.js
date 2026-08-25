@@ -1,35 +1,71 @@
+// 解析formData工具
+import multer from "multer"
 // DeepSeek API 配置
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions'
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY
 const DEEPSEEK_MODEL = 'deepseek-chat'
 
+const KIMI_API_KEY = process.env.KIMI_API_KEY
+const KIMI_API_URL = "https://api.moonshot.cn/v1/chat/completions"
+const KIMI_MODEL = "kimi-k2.6"
 
+const models = {
+  'DeepSeek-v4-flash':{
+    apiUrl : DEEPSEEK_API_URL,
+    apiKey : DEEPSEEK_API_KEY,
+    model : DEEPSEEK_MODEL,
+    displayName: "DeepSeek-v4-flash",
+  },
+  "Kimi-k2.6":{
+    apiUrl: KIMI_API_URL,
+    apiKey: KIMI_API_KEY,
+    model: KIMI_MODEL,
+    displayName : 'kimi-k2.6',
+  },
+}
+
+// console.log('KIMI_API_KEY exists:', !!process.env.KIMI_API_KEY)
+// console.log('KIMI_API_URL:', KIMI_API_URL)
+// console.log('KIMI_MODEL:', KIMI_MODEL)
 // res\req来自Node后端架构（Express）
 // req.request,请求：前端发给服务器的数据
 // response，响应：服务器返回给前端的数据
-export async function chatRoute(req, res) {
-  try {
-    const { messages } = req.body
 
+// 创建multer实例
+export const upload = multer({
+    storage: multer.memoryStorage(),
+})
+export async function chatRoute(req, res) {
+
+  try {
+    const { messages: messagesJson ,model } = req.body
+    const messages = JSON.parse(messagesJson)
+    const config = models[model]
+
+    if(!config){
+      return res.status(400).json({ err: "不支持的模型" })
+    }
     // 1. 参数校验：messages 必须是数组
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'messages 参数必须是数组' })
     }
 
+    console.log(messages);
+
     // 2. 使用原生 fetch 调用 DeepSeek API（非流式）
-    const response = await fetch(DEEPSEEK_API_URL, {
+    const response = await fetch(config.apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+        Authorization: `Bearer ${config.apiKey}`,
       },
       body: JSON.stringify({
-        model: DEEPSEEK_MODEL,
+        model: config.model,
         messages,
         stream: true,
       }),
     })
-
+    
     // 3. 处理 API 错误响应
     if (!response.ok) {
       const errorText = await response.text()

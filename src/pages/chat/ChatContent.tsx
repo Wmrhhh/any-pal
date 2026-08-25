@@ -7,9 +7,13 @@ import { db } from "../../db/db";
 import { useChatStore } from "../../store/chatStore";
 import Markdown from "../../components/Markdown/Markdown"
 import parseSSE from "../../utils/parseSSE"
+import { generateSubtitle } from '../../db/useChatDB'
 
 export default function ChatContent() {
-  const conversationId = useChatStore((state) => state.conversationId)
+  const conversationId = useChatStore(state => state.conversationId)
+  const currentModels = useChatStore(state => state.currentModels)
+  const setCurrentModels = useChatStore(state => state.setCurrentModels)
+  const model = conversationId === null ? "DeepSeek-v4-flash" : (currentModels[conversationId] ?? "DeepSeek-v4-flash")
   const messages = useMessages(conversationId)
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,9 +34,15 @@ export default function ChatContent() {
     if (conversationId !== null) {
       db.conversations.get(conversationId).then((conversation) => {
         setConversation(conversation || null)
+
+        if (conversation?.currentModel) {
+          setCurrentModels(conversationId, conversation.currentModel)
+        } else {
+          setCurrentModels(conversationId, "DeepSeek-v4-flash")
+        }
       })
     }
-  }, [conversationId])
+  }, [conversationId, setCurrentModels])
 
   // 调用后端接口的核心函数
   async function sendMessage() {
@@ -48,23 +58,29 @@ export default function ChatContent() {
     controllerRef.current = new AbortController();
 
     // 先把用户消息写入DB(写入完成后再发给API)
-    await addMessage(conversationId, "user", userContent)
+    await addMessage(conversationId, "user", userContent, model)
 
     const updatedMessages = [...messages, { role: "user" as const, content: userContent }]
+
+
 
     let fullReply = "";
     let buffer = "";
 
     try {
+      const formData = new FormData()
+      // formData.append('message',...)这个字段适合放字符串或文件，所以转成一个JSON格式的字符串
+      formData.append('messages', JSON.stringify(updatedMessages))
+      formData.append('model', model)
+
       // res是一个Response对象 status ok headers json() text()
       // await等待请求发出去，响应头返回来
       const res = await fetch("/api/chat", {
         method: "POST", // 提交数据
-        headers: {
-          "Content-Type": "application/json", // 告诉后端发送JSON格式数据
-        },
-        body: JSON.stringify({ messages: updatedMessages }), // 把JS对象解析成JSON字符串
-
+        // Formdata提交不写header,交给浏览器后，浏览器会自动设置
+        // 类似Content-Type: multipart/form-data; boundary=----WebKitFormBoundary...
+        // 其中boundary: 浏览器需要告诉服务器：“FormData里每一段数据从哪里开始、哪里结束”
+        body: formData,
         // 告诉fetch: 监听这个signal
         signal: controllerRef.current.signal
       });
@@ -84,12 +100,13 @@ export default function ChatContent() {
       // TextDecoder 是把字节码解析成我们认识的文字符号。
       const decoder = new TextDecoder()
       // const reply = data.choices[0].message.content;
+      // console.log(currentModel);
 
       while (true) {
         // 持续的拿取数据
         const { done, value } = await reader.read()
         if (done) {
-          await addMessage(conversationId, "assistant", fullReply)
+          await addMessage(conversationId, "assistant", fullReply, model)
           setStreamingReply('')
           break;
         }
@@ -109,7 +126,7 @@ export default function ChatContent() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
         if (fullReply) {
-          await addMessage(conversationId, "assistant", fullReply);
+          await addMessage(conversationId, "assistant", fullReply, model);
         }
         setStreamingReply('')
         console.log("用户停止生成");
@@ -120,7 +137,9 @@ export default function ChatContent() {
     } finally {
       setLoading(false);
     }
+    await generateSubtitle(conversationId)
   }
+
 
   function stopGenerate() {
     controllerRef.current?.abort();
@@ -145,6 +164,7 @@ export default function ChatContent() {
       shouldScrollToBottomRef.current = true
     }
   }, [conversationId]);
+
 
   // 场景2：消息变化 -> 条件滚动（用useLayoutEffect 避免闪烁）
   useLayoutEffect(() => {
@@ -172,7 +192,7 @@ export default function ChatContent() {
   return (
     <>
       <div className="flex flex-col bg-[#fafafa] dark:bg-[#1e1e1f] h-full min-h-0">
-        <h2 className="relative  dark:text-[#e1e1e5] text-[#19191a] pb-3 shrink-0 m-3 mb-0">
+        <h2 className="relative dark:text-[#e1e1e5] text-[#19191a] pb-3 shrink-0 m-3 mb-0">
           {/* 动态显示当前会话名称 */}
           {/* conversation有值时显示conversation.name,只有在null/undefined时显示“聊天” */}
           {conversation?.name ?? "聊天"}
@@ -184,7 +204,7 @@ export default function ChatContent() {
           onScroll={handleScroll}
         >
           {messages.map((msg) => (
-            <div key={msg.id} className="flex flex-col ">
+            <div key={msg.id} className="flex flex-col">
               <div className="text-[#7b7b80] flex justify-center">
                 {(() => {
                   const ts = (msg as ChatMessage).createdAt;
@@ -196,10 +216,14 @@ export default function ChatContent() {
                 })()}
               </div>
               <div
-                className={`bg-chat-bg flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div className={`mx-3 rounded-lg ${msg.role === "user" ? "" : "w-10 h-10 bg-[#000000]"}`}></div>
-                <div className={`${msg.role === "user" ? "" : "w-2/3"}  bg-[#eeeef0] text-[#19191a] dark:bg-[#2f2f30] dark:text-[#e1e1e5] rounded-lg p-3 mb-3`}><Markdown>{msg.content}</Markdown></div>
+                <div
+                  className={`${msg.role === "user" ? "" : "w-2/3"} bg-[#eeeef0] text-[#19191a] dark:bg-[#2f2f30] dark:text-[#e1e1e5] rounded-lg p-3 mb-3`}
+                >
+                  <Markdown>{msg.content}</Markdown>
+                </div>
                 <div className={`mx-3 rounded-lg ${msg.role === "user" ? "w-10 h-10 bg-[#19ac70]" : ""}`}></div>
               </div>
             </div>
@@ -207,14 +231,16 @@ export default function ChatContent() {
           {loading && !streamingReply && (
             < div className="flex justify-start">
               <div className="mx-3 rounded-lg w-10 h-10 dark:bg-[#000000]"></div>
-              <div className=" dark:text-[#e1e1e5]  text-[#19191a] rounded-lg p-3 mb-3 animate-pulse">正在思考中</div>
+              <div className="dark:text-[#e1e1e5] text-[#19191a] rounded-lg p-3 mb-3 animate-pulse">正在思考中</div>
             </div>)}
           {streamingReply && (
             <div
-              className={`bg-chat-bg flex justify-start`}
+              className={`flex justify-start`}
             >
               <div className={`mx-3 rounded-lg w-10 h-10 bg-[#000000]`}></div>
-              <div className={` w-2/3  bg-[#eeeef0] text-[#19191a] dark:bg-[#2f2f30] dark:text-[#e1e1e5] rounded-lg p-3 mb-3`}><Markdown>{streamingReply}</Markdown></div>
+              <div className={`w-2/3 bg-[#eeeef0] text-[#19191a] dark:bg-[#2f2f30] dark:text-[#e1e1e5] rounded-lg p-3 mb-3`}>
+                <Markdown>{streamingReply}</Markdown>
+              </div>
             </div>
           )}
         </div>
@@ -223,7 +249,8 @@ export default function ChatContent() {
           stopGenerate={stopGenerate}
           loading={loading}
           input={input}
-          setInput={setInput}>
+          setInput={setInput}
+        >
         </MessageBox>
       </div >
     </>

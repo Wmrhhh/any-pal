@@ -3,8 +3,9 @@ export interface Conversation {
   // 插入前对象没有 id，Dexie 的 ++id 会自动分配
   id?: number;  // chat的唯一编号
   name: string;  // 显示名称，如 DeepSeek
-  subtitle?: string;  // 副标题
+  subtitle: string;  // 副标题
   messageCount: number;   // 该会话下的消息数量
+  currentModel: string; // 会话当前选择的模型
   createdAt: number;  // 创建时间戳(什么时候创建的)
   updatedAt: number;  // 最后更新时间戳(用于排序)
 }

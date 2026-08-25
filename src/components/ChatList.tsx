@@ -27,6 +27,7 @@ export default function ChatList() {
               id={chat.id}
               name={chat.name}
               isSelected={conversationId === chat.id}
+              subtitle={chat.subtitle}
               updatedAt={chat.updatedAt}
               onClick={() => {
                 if (conversationId === chat.id) {

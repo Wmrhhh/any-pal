@@ -9,7 +9,7 @@ export default function SearchBox() {
   const [searchValue, setSearchValue] = useState('')
   const navigate = useNavigate()
   const handleAdd = async () => {
-    const id = await addConversation('新对话')
+    const id = await addConversation('DeepSeek')
     navigate(`/chat/${id}`)
   }
 
