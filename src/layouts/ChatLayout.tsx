@@ -9,7 +9,9 @@ export default function ChatLayout() {
 
   useEffect(() => {
     const parsedId = conversationId ? Number(conversationId) : null;
-    setConversationId(Number.isNaN(parsedId as number) ? null : (parsedId as number | null));
+    setConversationId(
+      Number.isNaN(parsedId as number) ? null : (parsedId as number | null),
+    );
   }, [conversationId, setConversationId]);
 
   return (

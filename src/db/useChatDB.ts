@@ -1,7 +1,7 @@
-import {emitConversationsUpdated } from '../utils/events'
-import { db } from "../db/db"
+import { emitConversationsUpdated } from "../utils/events";
+import { db } from "../db/db";
 
-let defaultConversationsInitPromise: Promise<void> | null = null
+let defaultConversationsInitPromise: Promise<void> | null = null;
 
 // 发送消息时调用：写入消息记录 + 更新会话的updatedAt
 export async function addMessage(
@@ -9,7 +9,7 @@ export async function addMessage(
   role: "user" | "assistant" | "system",
   content: string,
   model: string,
-){ 
+) {
   // const count = 0
   const now = Date.now();
   await db.messages.add({
@@ -20,19 +20,22 @@ export async function addMessage(
     createdAt: now,
   });
   const conversation = await db.conversations.get(conversationId);
-  const nextCount = (conversation?.messageCount ?? 0) + 1
-  await db.conversations.update(conversationId, { updatedAt: now, messageCount:nextCount });
+  const nextCount = (conversation?.messageCount ?? 0) + 1;
+  await db.conversations.update(conversationId, {
+    updatedAt: now,
+    messageCount: nextCount,
+  });
   emitConversationsUpdated();
 }
 
 // 更新subTitle
 export async function generateSubtitle(conversationId: number) {
   // console.log("开始生成 subtitle", conversationId)
-  const conversation = await db.conversations.get(conversationId)
+  const conversation = await db.conversations.get(conversationId);
   // console.log("conversation:", conversation)
-  if (!conversation) return
+  if (!conversation) return;
 
-  if (conversation.subtitle) return
+  if (conversation.subtitle) return;
 
   const firstUserMessage = await db.messages
     .where("conversationId")
@@ -42,11 +45,10 @@ export async function generateSubtitle(conversationId: number) {
 
   if (!firstUserMessage) return;
   // console.log(firstUserMessage);
-  
 
   const userContent = firstUserMessage.content.trim();
   if (!userContent) return;
-  
+
   try {
     // console.log("准备请求 summarySubtitle")
     const res = await fetch("/api/summarySubtitle", {
@@ -57,8 +59,8 @@ export async function generateSubtitle(conversationId: number) {
       body: JSON.stringify({ userContent }),
     });
 
-    if(!res.ok){
-      throw new Error(`请求失败：${res.status}`)
+    if (!res.ok) {
+      throw new Error(`请求失败：${res.status}`);
     }
     // console.log("fetch 已经返回", res)
     const data = await res.json();
@@ -66,25 +68,24 @@ export async function generateSubtitle(conversationId: number) {
     const subtitle = data?.choices?.[0]?.message?.content?.trim();
     if (!subtitle) return;
     // console.log(subtitle);
-    
+
     await db.conversations.update(conversationId, { subtitle });
-    emitConversationsUpdated()
+    emitConversationsUpdated();
   } catch (err) {
     console.log(err);
   }
-  
-  
 }
 
-export async function updateCurrentModel(conversationId:number,currentModel:string){
-  await db.conversations.update(conversationId, { currentModel: currentModel })
-  emitConversationsUpdated()
+export async function updateCurrentModel(
+  conversationId: number,
+  currentModel: string,
+) {
+  await db.conversations.update(conversationId, { currentModel: currentModel });
+  emitConversationsUpdated();
 }
 
 // 添加新会话时调用
-export async function addConversation(
-  name: string,
-){
+export async function addConversation(name: string) {
   // 1. 查找 messageCount === 0 的会话
   const emptyConv = await db.conversations
     .where("messageCount")
@@ -100,7 +101,7 @@ export async function addConversation(
     await db.conversations.update(emptyConv.id, {
       name,
       updatedAt: Date.now(),
-      subtitle: '',
+      subtitle: "",
     });
     return emptyConv.id;
   }
@@ -109,9 +110,9 @@ export async function addConversation(
   const now = Date.now();
   const newId = await db.conversations.add({
     name,
-    subtitle:'',
+    subtitle: "",
     messageCount: 0,
-    currentModel:"DeepSeek-v4-flash",
+    currentModel: "DeepSeek-v4-flash",
     createdAt: now,
     updatedAt: now,
   });
@@ -119,13 +120,12 @@ export async function addConversation(
   return newId;
 }
 
-export async function deleteConversation(id:number){
- 
+export async function deleteConversation(id: number) {
   // 事务保证原子性--消息和会话要么一起删要么都不删
   await db.transaction("rw", [db.conversations, db.messages], async () => {
     await db.messages.where("conversationId").equals(id).delete();
     await db.conversations.delete(id);
-  })
+  });
   emitConversationsUpdated();
 }
 
@@ -138,21 +138,46 @@ export async function initDefaultConversations() {
   }
 
   // "rw" 事务保证原子性：查空和插入要么都成功，要么都失败
-  defaultConversationsInitPromise = db.transaction("rw", db.conversations, async () => {
-    // 查询表内有多少条记录  count()是Dexie的计数api，返回一个数字
-    const count = await db.conversations.count();
-    if (count === 0) {
-      const now = Date.now();
-      // bulkAdd()批量插入，比循环调用add()效率高
-      // 这里按默认顺序设置不同的时间戳，避免 updatedAt 相同导致排序顺序不稳定
-      await db.conversations.bulkAdd([
-        { name: "DeepSeek", subtitle: "探索未至之境", createdAt: now + 2, currentModel: "DeepSeek-v4-flash",updatedAt: now + 2, messageCount: 0 },
-        { name: "chatGPT", subtitle: "探索未至之境", createdAt: now + 1, currentModel: "DeepSeek-v4-flash",updatedAt: now + 1, messageCount: 0 },
-        { name: "kimi", subtitle: "探索未至之境", createdAt: now, currentModel: "DeepSeek-v4-flash",updatedAt: now, messageCount: 0 },
-      ]);
-      emitConversationsUpdated();
-    }
-  });
+  defaultConversationsInitPromise = db.transaction(
+    "rw",
+    db.conversations,
+    async () => {
+      // 查询表内有多少条记录  count()是Dexie的计数api，返回一个数字
+      const count = await db.conversations.count();
+      if (count === 0) {
+        const now = Date.now();
+        // bulkAdd()批量插入，比循环调用add()效率高
+        // 这里按默认顺序设置不同的时间戳，避免 updatedAt 相同导致排序顺序不稳定
+        await db.conversations.bulkAdd([
+          {
+            name: "DeepSeek",
+            subtitle: "探索未至之境",
+            createdAt: now + 2,
+            currentModel: "DeepSeek-v4-flash",
+            updatedAt: now + 2,
+            messageCount: 0,
+          },
+          {
+            name: "chatGPT",
+            subtitle: "探索未至之境",
+            createdAt: now + 1,
+            currentModel: "DeepSeek-v4-flash",
+            updatedAt: now + 1,
+            messageCount: 0,
+          },
+          {
+            name: "kimi",
+            subtitle: "探索未至之境",
+            createdAt: now,
+            currentModel: "DeepSeek-v4-flash",
+            updatedAt: now,
+            messageCount: 0,
+          },
+        ]);
+        emitConversationsUpdated();
+      }
+    },
+  );
 
   try {
     await defaultConversationsInitPromise;

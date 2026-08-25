@@ -1,8 +1,7 @@
 // Dexie是IndexedDB的封装库。IndexedDB是浏览器内置数据库
 // Table是Dexie库中导出的一个类型，用于声明Dexie表的结构
 import Dexie, { type Table } from "dexie";
-import type { Conversation, ChatMessage } from "../types/chat"
-
+import type { Conversation, ChatMessage } from "../types/chat";
 
 // 定义一个类继承自Dexie
 export class ChatDatabase extends Dexie {
@@ -10,33 +9,36 @@ export class ChatDatabase extends Dexie {
   // !: 非空断言
   // 有一张叫 conversations 的表，存的数据是 Conversation 结构，主键(id)是 number 类型
   conversations!: Table<Conversation, number>;
-  messages!: Table<ChatMessage, number>
+  messages!: Table<ChatMessage, number>;
 
-  constructor(){
+  constructor() {
     // 调用父类的构造函数 chatAppDB数据库名称
-    super("chatAppDB")
+    super("chatAppDB");
 
     // version(1): 数据库版本号  stores: 定义有哪些表，以及每张表的结构规则
     // 修改表结构时必须升级版本号
-    this.version(3).stores({
-      conversations: "++id, updatedAt, messageCount",
-      messages: "++id, conversationId, [conversationId+createdAt]"
-    }).upgrade(async tx => {
-      const conversations = await tx.table("conversations").toArray();
+    this.version(3)
+      .stores({
+        conversations: "++id, updatedAt, messageCount",
+        messages: "++id, conversationId, [conversationId+createdAt]",
+      })
+      .upgrade(async (tx) => {
+        const conversations = await tx.table("conversations").toArray();
 
         for (const conv of conversations) {
           if (conv.id == null) continue;
 
-            const count = await tx.table("messages")
+          const count = await tx
+            .table("messages")
             .where("conversationId")
-             .equals(conv.id)
+            .equals(conv.id)
             .count();
 
-        await tx.table("conversations").update(conv.id, {
-      messageCount: count,
-    });
-  }
-});
+          await tx.table("conversations").update(conv.id, {
+            messageCount: count,
+          });
+        }
+      });
   }
 }
 

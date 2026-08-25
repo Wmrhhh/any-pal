@@ -2,20 +2,17 @@
 // App.tsx通常作为应用根组件，
 
 import "./App.css";
-import './index.css'
-import { RouterProvider } from 'react-router-dom'
-import router from "./router"
-import ThemeProvider from './components/ThemeProvider'
+import "./index.css";
+import { RouterProvider } from "react-router-dom";
+import router from "./router";
+import ThemeProvider from "./components/ThemeProvider";
 
 function App() {
-
   return (
-
     <ThemeProvider>
       <RouterProvider router={router} />
     </ThemeProvider>
-  )
-
+  );
 }
 
 export default App;

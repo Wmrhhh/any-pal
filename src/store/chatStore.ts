@@ -1,16 +1,16 @@
-import create from 'zustand'
+import create from "zustand";
 
 interface ConversationState {
-  conversationId: null | number
-  setConversationId: (id: number | null) => void
+  conversationId: null | number;
+  setConversationId: (id: number | null) => void;
 
-  currentModels: Record<number, string>
-  setCurrentModels: (conversationId: number, model: string) => void
+  currentModels: Record<number, string>;
+  setCurrentModels: (conversationId: number, model: string) => void;
 }
-type theme = "light" | "dark"
+type theme = "light" | "dark";
 interface ThemeStore {
-  theme: theme
-  setTheme: (theme: theme) => void
+  theme: theme;
+  setTheme: (theme: theme) => void;
 }
 
 // create<ConversationState>: 创建一个符合 ConversationState 类型的 store
@@ -19,7 +19,7 @@ export const useChatStore = create<ConversationState>((set) => ({
   setConversationId(id) {
     set({
       conversationId: id,
-    })
+    });
   },
   currentModels: {},
   setCurrentModels(conversationId, model) {
@@ -29,15 +29,15 @@ export const useChatStore = create<ConversationState>((set) => ({
         ...state.currentModels,
         [conversationId]: model,
       },
-    }))
+    }));
   },
-}))
+}));
 
 export const useThemeStore = create<ThemeStore>((set) => ({
   theme: "dark",
   setTheme(theme) {
     set({
-      theme: theme
-    })
+      theme: theme,
+    });
   },
-}))
+}));

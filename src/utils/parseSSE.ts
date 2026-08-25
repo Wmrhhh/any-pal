@@ -1,7 +1,4 @@
-export default function parseSSE(
-  chunk: string ,
-  buffer: string
-){
+export default function parseSSE(chunk: string, buffer: string) {
   // 1. 拼接之前没有处理完的数据
   buffer += chunk;
 
@@ -15,7 +12,6 @@ export default function parseSSE(
 
   // 3. 处理完整消息
   for (const part of parts) {
-
     // 空字符串跳过
     if (!part.trim()) continue;
 
@@ -23,32 +19,24 @@ export default function parseSSE(
     const jsonString = part.replace(/^data:\s*/, "");
 
     // DeepSeek结束标志
-    if(jsonString === "[DONE]"){
+    if (jsonString === "[DONE]") {
       continue;
     }
 
     try {
-
       const data = JSON.parse(jsonString);
 
-      const content =
-        data.choices?.[0]?.delta?.content;
+      const content = data.choices?.[0]?.delta?.content;
 
-      if(content){
+      if (content) {
         messages.push(content);
       }
-
-    } catch(error){
-
-      console.error(
-        "SSE解析失败",
-        error,
-        part
-      );
+    } catch (error) {
+      console.error("SSE解析失败", error, part);
     }
   }
   return {
     messages,
-    buffer
+    buffer,
   };
 }

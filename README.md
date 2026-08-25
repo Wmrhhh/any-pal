@@ -92,14 +92,14 @@ any-pal/
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start frontend dev server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
-| `cd server && npm run dev` | Start backend dev server |
-| `cd server && npm start` | Start backend in production |
+| Command                    | Description                 |
+| -------------------------- | --------------------------- |
+| `npm run dev`              | Start frontend dev server   |
+| `npm run build`            | Build for production        |
+| `npm run preview`          | Preview production build    |
+| `npm run lint`             | Run ESLint                  |
+| `cd server && npm run dev` | Start backend dev server    |
+| `cd server && npm start`   | Start backend in production |
 
 ## Roadmap
 

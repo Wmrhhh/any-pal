@@ -6,17 +6,16 @@ type ThemeProviderProps = {
 };
 
 export default function ThemeProvider({ children }: ThemeProviderProps) {
-  const theme = useThemeStore((state) => state.theme)
+  const theme = useThemeStore((state) => state.theme);
 
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add("dark")
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove("dark")
+      document.documentElement.classList.remove("dark");
     }
-
-  }, [theme])
+  }, [theme]);
 
   // 提供能力而不是创造额外的DOM结构--关于为什么只返回children
-  return children
+  return children;
 }

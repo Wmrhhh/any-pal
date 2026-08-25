@@ -8,9 +8,8 @@ import EmptyChat from "../pages/chat/EmptyChat";
 import AccountPage from "../pages/settings/AccountPage";
 import ModelPage from "../pages/settings/ModelPage";
 import ThemePage from "../pages/settings/ThemePage";
-import ChatLayout from "../layouts/ChatLayout"
-import SettingLayout from "../layouts/SettingLayout"
-
+import ChatLayout from "../layouts/ChatLayout";
+import SettingLayout from "../layouts/SettingLayout";
 
 const router = createBrowserRouter([
   {
@@ -64,4 +63,4 @@ const router = createBrowserRouter([
   },
 ]);
 
-export default router
+export default router;
