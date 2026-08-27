@@ -68,9 +68,9 @@ export async function chatRoute(req, res) {
     // 3. 处理 API 错误响应
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("DeepSeek API 错误：", response.status, errorText);
+      console.error(" API 错误：", response.status, errorText);
       return res.status(response.status).json({
-        error: "调用 DeepSeek 失败",
+        error: "调用 API 失败",
         detail: errorText,
       });
     }

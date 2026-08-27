@@ -10,10 +10,12 @@ import ModelPage from "../pages/settings/ModelPage";
 import ThemePage from "../pages/settings/ThemePage";
 import ChatLayout from "../layouts/ChatLayout";
 import SettingLayout from "../layouts/SettingLayout";
+import ErrorPage from "../pages/ErrorPage";
 
 const router = createBrowserRouter([
   {
     element: <AppLayout />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/",

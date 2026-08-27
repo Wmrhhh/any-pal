@@ -126,11 +126,14 @@ export default function ChatContent() {
       // 把AI回复写入DB
       // await addMessage(conversationId, "assistant", reply)
     } catch (err) {
+
+      // 先处理已经生成的数据
+      if (fullReply) {
+        await addMessage(conversationId, "assistant", fullReply, model);
+      }
+      setStreamingReply("");
+      // 判断错误 是不是用户主动停止 属不属于 DOMException
       if (err instanceof DOMException && err.name === "AbortError") {
-        if (fullReply) {
-          await addMessage(conversationId, "assistant", fullReply, model);
-        }
-        setStreamingReply("");
         console.log("用户停止生成");
         return;
       }
