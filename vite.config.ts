@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
+// import { visualizer } from "rollup-plugin-visualizer"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,6 +10,12 @@ export default defineConfig({
     tailwindcss(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
+    //  visualizer({
+    //   filename: "stats.html",
+    //   open: true,
+    //   gzipSize: true,
+    //   brotliSize: true,
+    // }),
   ],
 
   server: {
