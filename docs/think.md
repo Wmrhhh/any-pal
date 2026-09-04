@@ -470,3 +470,194 @@ CLS: 页面内容有没有突然跳动
 # 经过大量数据、多种类型数据的压力测试
 ## 性能问题初步定位
 - 通过 DeveloTools Performance 对大量历史消息场景进行录制，发现切换会话和滚动过程中存在明显卡顿
+
+
+## 切换会话推理链
+
+- 我做的是「切换会话」
+        ↓
+- 为什么切换会卡？
+        ↓
+- 可能原因：
+    ├─ 大量 DOM 节点
+    ├─ 大量组件重新渲染
+    ├─ Markdown 重新解析
+    ├─ 代码高亮
+    ├─ IndexedDB 查询
+    ├─ 大量 JavaScript 计算
+    └─ 其他浏览器工作
+        ↓
+- Profiler 告诉我 CPU 到底在干什么
+        ↓
+- Call Tree 发现 SyntaxHighlighter
+        ↓
+- 查看代码我的项目确实大量使用代码高亮
+        ↓
+- SyntaxHighlighter 在调用链里占据了比较明显的位置
+        ↓
+- 所以：
+「代码高亮导致切换会话卡顿」
+ 成为一个合理的怀疑
+
+## Firefox 采样（sampling）
+- Performance里的采样，就是浏览器每隔一小段时间“偷拍一次”当前JavaScript主线程正在执行什么，然后用这些照片统计：那些函数最经常出现在CPU执行现场
+
+
+## Performance Optimization
+
+### 场景
+
+切换到包含大量历史消息和代码块的会话。
+
+### Baseline
+
+- Browser: Firefox
+- Build: Development Build
+- Test data: 固定会话
+- Action: 切换会话
+
+| 指标 | Baseline |
+|---|---:|
+| Total samples | 469 |
+| SyntaxHighlighter | 189 |
+| DefaultRenderer | 156 |
+| createElement | 154 |
+
+主要热点：
+
+SyntaxHighlighter
+→ DefaultRenderer
+→ createElement
+
+### Hypothesis
+
+切换大量历史消息时，每个代码块都会经过
+SyntaxHighlighter 进行语法高亮。
+
+大量代码块可能导致大量 React Element 创建，
+从而增加 CPU 开销。
+
+### 甲 A/B Experiment
+
+临时将 SyntaxHighlighter 替换为原生：
+
+<pre>
+  <code>
+</pre>
+
+其他代码保持不变。
+
+### 乙 A/B Experiment 
+
+通过 
+```js
+const visibleMessages = messages.slice(-10);
+``` 
+只渲染最后十条消息
+
+其他代码不变
+### Experiment Result
+
+| 指标 | 原版 | 甲: code替换lightheight实验版 | 乙: 只渲染最后十条消息实验版 |
+|---|---:|---:|---:|
+| Total samples | 469 | 116 | 239 |
+| SyntaxHighlighter | 189 | 消失 | 102 |
+| Markdown | - | 80 |  |
+| micromark | - | 43 |  |
+| 点击到完整展现 | 约1423ms | 约213ms | 约731ms |
+Total samples 从 469 降至 116，
+下降约 75%。
+
+### Conclusion
+
+- 甲实验结果支持原假设：
+
+    SyntaxHighlighter 是当前场景的重要性能热点。
+    但实验版本删除了代码高亮功能，
+    因此不能直接作为最终方案。
+
+- 乙实验结果
+
+    将渲染消息数量减少后，Total samples 下降约 49%
+    SyntaxHighlighter samples 下降约 46%
+    说明一次性渲染大量历史消息是会话切换 CPU 开销的重要来源
+    SyntaxHighlighter 是当前渲染过程中的主要热点之一
+
+
+## 总结
+- 当前会话切换的性能开销主要来自大量历史消息的一次性渲染，其中 Markdown 解析和 SyntaxHighlighter 又是每条消息渲染过程中的高成本环节。
+
+
+# 优化
+## 实验1：为CodeBlock添加React.memo
+- 结果：第一次切换会话的profiler指标没有明显下降，SyntaxHightLighter、Defaultrenderer、createElement仍占据主要CPU成本
+- 结论：第一次切换会话的主要成本并非已经挂载的CodeBlock重复更新，而是大量历史消息首次渲染时产生的Markdown/代码块解析及SyntaxHightlght工作。因此React.memo暂不作为主要优化手段。
+
+## 实验2：为CodeBlock添加延迟高亮
+- 结果：从开始切换会话到切换会话完成，白屏时间降低很多，但如代码块高亮过多，还是会有很长的时间等待代码从普通到高亮
+- 数据：从点击会话到完整显示会话的时间约为 823ms
+- 结论：进一步证明普通聊天切换会话成本很低，代码高亮会极大地放大消息数量过大的渲染成本。总结延迟高亮有效提高用户体验，但后续可以/需要结合其他方案进一步优化
+
+## 实验3：基于视口的延迟高亮
+- 结果：进一步加快了从点击切换会话到完成的时间，但这个过程多了一个从A的消息到B的普通消息再到B的高亮消息的过程，会有一个明显的感觉，但影响不大
+- 数据：完整时间由 约1.4s 到 约630ms 用户感知切换时间降低 约55%
+- 结论：当前规模下继续增加缓存复杂度收益有限
+
+# 最终方案为 基于视口的延迟高亮
+
+# 发现首次白屏时间长达2分钟左右
+- 首屏加载慢 → Network（网络）发现 @lobehub/icons 超过 25 MB → 搜索项目引用 → 发现 state.html 引用了大量 icons → 判断是上次 Bundle Analysis（包体积分析）生成的残留文件 → 删除 → 首屏恢复正常
+
+
+# 简历
+- 性能分析与优化： 使用 Firefox Profiler、DevTools Network 对大量消息场景进行性能定位，通过 Call Tree（调用树）定位 Markdown / Syntax Highlighting（语法高亮）等渲染开销，并针对代码块实现视口级延迟高亮；同时排查开发环境首屏异常加载，定位到历史 Bundle Analysis（包体积分析）产物 state.html 引入大量 @lobehub/icons，清理残留分析产物后恢复正常。
+
+
+
+
+# 2026-9-1
+
+## 测试的核心意义：
+- 防止以后修改代码时把已经正常的功能改坏
+
+## 项目内做的测试
+
+- 主要针对项目的核心链路做了测试。首先对流式AI回复的parseSSE做了纯函数测试，重点覆盖了跨chunk数据、[DONE]、非法JSON等边界情况；其次对Dexie数据层进行了测试，验证消息写入、会话删除以及关联消息的清理;最后对Zustand store 做了状态逻辑测试。测试环境使用fake-indexeddb模拟IndexDB,并通过mock隔离非核心的事件副作用
+
+## 为什么不直接测试UI？
+
+- 因为这几个逻辑本身和UI没有强耦合。比如parseSSE是纯函数，直接测试输入输出成本更低；Zustand store 也可以直接通过getState()测试状态变化。这样测试更稳定，也更容易定位问题。
+
+### UI测试的优势
+- 更接近真实用户使用系统的方式
+
+## 为什么测试数据有没有正确解析、数据有没有正确存储、状态有没有正确变化这三个部分？
+
+1. 数据有没有解析是流式聊天的基础设施
+2. 有没有正确存储是持久化层(Persistence Layer) 确保数据正常显示
+
+
+## 测试出错，怎么看？怎么解决？
+
+- 运行 npm run test 
+
+## Vitest(一个 JavaScript / TypeScript 测试框架)
+
+- 提供测试语法 包括describe、beforeEach、it、expect
+- vi.mock 模拟依赖
+- fake-indexeddb 在Node中模拟IndexedDb
+- getState() 直接读取Zustand状态
+- buffer 暂存不完整的流式数据
+
+## 测试结构
+- AAA Pattern
+- 准备(Arrange) -> 执行(Act) -> 断言(Assert)
+
+## 单元测试
+- 主要回答这个函数对不对
+## 集成测试
+- 这些模块组合起来对不对
+## UI/组件测试
+- 这个组件在用户操作后对不对
+## E2E 
+- 用户从头到尾完成这个操作对不对

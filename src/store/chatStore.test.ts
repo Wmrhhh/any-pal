@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { useChatStore, useThemeStore } from "./chatStore";
 
 describe("useChatStore", () => {
+  // beforeEach: 这个describe里面的每个测试开始之前，都执行一次
   beforeEach(() => {
     useChatStore.setState({
       conversationId: null,
@@ -9,6 +10,7 @@ describe("useChatStore", () => {
     });
   });
 
+  // 状态逻辑和UI测试可以分离测试
   it("初始状态正确", () => {
     const state = useChatStore.getState();
     expect(state.conversationId).toBeNull();
@@ -38,6 +40,7 @@ describe("useChatStore", () => {
     useChatStore.getState().setCurrentModels(1, "DeepSeek-v4-flash");
     useChatStore.getState().setCurrentModels(2, "Kimi-k2.6");
 
+    // 测试设置会话2的模型时，会不会把会话1的模型弄没
     const { currentModels } = useChatStore.getState();
     expect(currentModels[1]).toBe("DeepSeek-v4-flash");
     expect(currentModels[2]).toBe("Kimi-k2.6");

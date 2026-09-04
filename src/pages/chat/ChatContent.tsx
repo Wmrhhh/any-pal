@@ -191,6 +191,8 @@ export default function ChatContent() {
     });
   }, [messages, streamingReply]);
 
+  // 临时实验：只渲染最后 10 条消息
+  // const visibleMessages = messages.slice(-10);
   return (
     <>
       <div className="flex flex-col bg-[#fafafa] dark:bg-[#1e1e1f] h-full min-h-0">

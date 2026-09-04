@@ -12,6 +12,8 @@ import {
   addConversation,
 } from "./useChatDB";
 
+
+// 测试辅助函数 准备测试用conversation.
 async function seedConversation(
   overrides: Partial<{
     name: string;
@@ -34,6 +36,8 @@ async function seedConversation(
 
 describe("useChatDB", () => {
   beforeEach(async () => {
+    // clear: 每次测试之前都清空数据库，准备自己的数据，这样每个测试都彼此独立
+    // 为 Test IsoIation(测试隔离) 
     await db.conversations.clear();
     await db.messages.clear();
   });
@@ -44,8 +48,10 @@ describe("useChatDB", () => {
 
       await addMessage(convId, "user", "Hello world", "DeepSeek-v4-flash");
 
+      // 测试调用之后数据库到底有没有变成我期望的状态
       const messages = await db.messages.toArray();
       expect(messages).toHaveLength(1);
+
       expect(messages[0].content).toBe("Hello world");
       expect(messages[0].role).toBe("user");
       expect(messages[0].conversationId).toBe(convId);
@@ -106,6 +112,7 @@ describe("useChatDB", () => {
       expect(orphanedMessages).toHaveLength(0);
     });
 
+    // Boundary/Isolation (边界/隔离)测试
     it("只删除目标会话的消息，不影响其他会话", async () => {
       const convA = await seedConversation({ name: "A" });
       const convB = await seedConversation({ name: "B" });

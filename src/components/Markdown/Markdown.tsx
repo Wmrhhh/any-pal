@@ -5,12 +5,17 @@ import remarkGfm from "remark-gfm";
 import CodeBlock from "./CodeBlock";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+// import { memo } from "react";
 
 interface MarkdownProps {
   children: string;
 }
 
 export default function Markdown({ children }: MarkdownProps) {
+  console.log(
+    "Markdown render:",
+    children.slice(0, 30)
+  );
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
